@@ -1,14 +1,10 @@
 //Lab 5: Stock Charts - Ana Arias-Gonzalez
 
 // The stock names
-final String stockNames[] = {
-  "Apple","Google", "Amazon"
-};
+final String stockNames[] = { "Apple","Google", "Amazon"};
 
 // The names of the files containing the stocks 
-final String fileNames[] = {
-  "aapl.csv","goog.csv", "amzn.csv"
-};
+final String fileNames[] = { "aapl.csv","goog.csv", "amzn.csv"};
 
 // An easy way to get the number of stocks
 final int numStocks = fileNames.length;
