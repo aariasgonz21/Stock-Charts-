@@ -1,0 +1,194 @@
+//Lab 5: Stock Charts - Ana Arias-Gonzalez
+
+// The stock names
+final String stockNames[] = {
+  "Apple","Google", "Amazon"
+};
+
+// The names of the files containing the stocks 
+final String fileNames[] = {
+  "aapl.csv","goog.csv", "amzn.csv"
+};
+
+// An easy way to get the number of stocks
+final int numStocks = fileNames.length;
+
+// Some 2-d arrays that make it easy to add and remove stocks
+float prices[][] = new float[numStocks][];
+float coordinates[][] = new float[numStocks][4];
+
+// The max and min of our stocks
+float minPrices[] = new float[numStocks];
+float maxPrices[] = new float[numStocks];
+
+
+void setup()
+{
+  size(600, 800);
+  // Load the data from the files
+  for (int i = 0; i < numStocks; i++)
+  {
+  String[] lines = loadStrings(fileNames[i]);
+  prices[i]=splitData(lines);  
+  }
+
+  // Graph SetUp
+  setupGraphCoordinates(coordinates);
+
+  // Get statistics
+  for (int i = 0; i < prices.length; i++)
+  {
+    // Get the max and min stock prices
+     maxPrices[i]=max(prices[i]);
+     minPrices[i]=min(prices[i]);
+    // Print out the max, min and average for each stock
+    println("Max Price of " + stockNames[i] + 
+      " in the Last Year is "+maxPrices[i]);
+    println("Min Price of " + stockNames[i] + 
+      "in the Last Year is "+minPrices[i]);
+    println("Average Price of  " + stockNames[i] + 
+      " in the Last Year is "+ average(prices[i]));
+  }
+}
+
+// Here we are setting up the coordinates 
+// we'll use for each graph of the stock
+void setupGraphCoordinates(float input[][])
+{ 
+  float numItems=input.length;
+  for(int i=0; i<numItems; i++){
+  // offset our graphs to give a nice border
+   input[i][0]=50;
+  // this is the upper left of the rectangle, thus we want
+  // to divide the height by the number of stocks
+  // and get the current y coordinate for a stock
+  input[i][1]=i*(height/numItems)+50;
+  // this is the width of rectangle, we want
+  // a slight border for the graph in each direction
+   input[i][2]=width-100;
+  // this is the height of each graph
+    input[i][3]=height/numItems-100; 
+}
+}
+void draw() {
+  background(0);
+  for(int i=0; i<numStocks; i++){ 
+  // for each stock...
+  drawGraph(prices[i], minPrices[i], maxPrices[i], coordinates[i]);
+  // draw the "graph", this includes the background rectangle and data
+  movingAverage(prices[i], minPrices[i], maxPrices[i], coordinates[i], 20);
+  // draw the moving average for a certain number of days
+  title(stockNames[i], coordinates[i][0], coordinates[i][1]-10);
+  // give it a title based on the name of the stock 
+  drawXLabels(coordinates[i]);
+  // draw the month labels
+  drawYLabels(coordinates[i], minPrices[i], maxPrices[i]);
+  // draw the price labels
+    
+   
+  // put the text stating where we got the data 
+  textSize(10);
+  textAlign(RIGHT, BOTTOM);
+  text("Source: Yahoo! Finance (finance.yahoo.com)", width-10, height-10);
+}
+}
+void drawGraph(float[] data, float ymin, float ymax, float[] coord)
+{
+  // first draw the background of the graph
+  noStroke();
+  fill(33,70,244);
+  rect(coord[0], coord[1], coord[2], coord[3]);
+  // next, draw the data
+  stroke(0);
+  strokeWeight(1);
+  beginShape();
+  for(int i=0; i < data.length; i++){
+    float x= map(i, 0, data.length, coord[0], coord [2]);
+    float y= map(data[i], ymin, ymax, coord[3]+coord[1], coord[1]);
+    curveVertex(x,y);
+  }
+  endShape();  
+}
+
+// the "title" of the company
+void title(String company, float x, float y)
+{
+  fill(255);
+  textSize(18);
+  textAlign(LEFT);
+  text(company+ " Inc. 2013-14 December", x, y);
+}
+
+// map the months (e.g. 1,2,...12) from the starting x coord to the ending x coord
+void drawXLabels(float[] coord) {
+  fill(255);
+  textSize(10);
+  textAlign(RIGHT);
+  stroke(255);
+  // for each month
+  for (int i=1; i<=12; i++)
+  {
+    //map it!
+    float x=map(i,0,12, coord[0],coord[2]); 
+    text(i,x,coord[1]+coord[3]+10);
+  }
+  textSize(18);
+  text("Month", coord[2]/2, coord[1]+coord[3]+30);
+}
+
+// map the prices
+void drawYLabels(float[] coord, float ymin, float ymax) {
+  fill(255);
+  textSize(10);
+  textAlign(RIGHT);
+  stroke(255);
+  for (float i=ymin; i<=ymax; i=i+10.0) {
+     float y=map(i, ymin, ymax, coord[1]+coord[3], coord[1]);
+     text(floor(i), coord[0]-10,y);
+     line(coord[0],y,coord[0]-5,y);
+  }
+  textSize(18);
+  text("$", coord[0]-40, coord[1]+100);
+}
+
+// calculate the average of the values in the array
+float average (float[] data) {
+  float sum=0;
+  for(int i=0; i<data.length; i++)
+  {
+    sum=sum+data[i];
+  }
+   return sum/data.length;
+}
+
+// parse the data in the file
+float[] splitData(String[] line) {
+  float[]prc=new float[line.length-1];
+  for(int i=1; i<line.length; i++){
+    String[] pieces=split(line[i], ",");
+    prc[i-1]=float(pieces[6]);
+  }
+   return prc;
+}
+
+// display the moving average
+void movingAverage(float[] data, float ymin, float ymax, float[] coord, int MAP)
+{
+  noFill();
+  stroke(255, 0, 0);
+  strokeWeight(2);
+  beginShape();
+  // the moving average uses a "window" to calculate the average
+  for (int i=MAP-1; i<data.length; i++)
+  {
+    float sum=0;
+    for(int k=i-(MAP-1); k<=i; k++){
+      sum = sum +data[k];
+    }
+    float MA = sum/MAP;
+    float x=map(i,0,data.length-1, coord[0], coord[2]);
+    float y=map(MA, ymin, ymax, coord[1]+coord[3], coord[1]);
+    vertex(x,y);
+  }
+  endShape();
+}
